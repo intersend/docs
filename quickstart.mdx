@@ -47,6 +47,64 @@ Our iframe is a light version of Intersend. It essentially provides a button tha
 
 For each event, your app and our app will constantly share these events with each other and execute relevant functions. These events include obtaining certain permissions, creating payment records, processing transactions, and more.
 
+
+#### Example code snippet
+
+```javascript
+### Iframe Integration Snippet
+
+To integrate your web application with the Intersend App Store using an iframe, you can use the following snippet. This iframe can send and receive events, enabling seamless interaction between your application and the Intersend backend.
+
+```html
+<iframe
+  width="375"
+  height="667"
+  src="https://embed.intersend.io/?ref=your_referral_id&utm_source=intersend_demo&theme=your_theme"
+  sandbox="allow-same-origin allow-popups allow-scripts allow-forms"
+/>
+<script>
+  window.onmessage = function(e) {
+    if (e.origin !== 'https://embed.intersend.io') {
+      return;
+    }
+
+    const {
+      event,
+      data
+    } = e.data;
+
+    switch(event) {
+      case 'request_permission':
+        // Handle permission request with `data`
+        break;
+      case 'payment_intent':
+        // Handle payment intent with `data`
+        break;
+      case 'create_user':
+        // Handle user creation with `data`
+        break;
+      case 'generate_wallet_address':
+        // Handle wallet address generation with `data`
+        break;
+      default:
+        break;
+    }
+
+  }
+
+  // Example of sending an event to the iframe
+  const iframe = document.querySelector('iframe');
+  iframe.contentWindow.postMessage({
+    event: 'init',
+    data: {
+      userId: 'your_user_id',
+      sessionId: 'your_session_id'
+    }
+  }, 'https://embed.intersend.io');
+</script>
+```
+
+
 ```plaintext
 User                   Web App                Intersend Iframe            Intersend Wallet
  |                        |                         |                           |
