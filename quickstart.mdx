@@ -212,6 +212,260 @@ Revoke previously granted permissions from a user. This event can be used to ens
 
 These events provide a comprehensive set of interactions that developers can use to build robust applications within the Intersend App Store ecosystem.
 
+### 3. Bring Your Own APIs
+
+Developers can leverage Intersend's custom-made branded UI by providing their own APIs. This integration method allows you to maintain your backend while taking advantage of Intersend's user-friendly interface and user base.
+
+#### How It Works
+
+1. You develop and host the required APIs (detailed below).
+2. You provide Intersend with your API endpoints and any necessary authentication details.
+3. Intersend creates a new app within our ecosystem, integrating your APIs with our custom UI.
+4. The app goes through our testing and approval process.
+5. Once approved, your app becomes available to users in the Intersend App Store.
+
+#### Required APIs
+
+To integrate your app with Intersend, you need to provide the following APIs:
+
+##### 1. JWT Verification (Optional)
+**Endpoint:** `/jwt-verify`
+
+This optional endpoint enhances security by verifying the JWT token sent by Intersend.
+
+**Request:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+```json
+{
+  "valid": true,
+  "userId": "user123"
+}
+```
+
+
+##### 2. App Details
+**Endpoint:** `/details`
+
+Provides information about your app for display in the Intersend UI.
+
+**Response:**
+```json
+{
+  "name": "YourApp",
+  "description": "A brief description of your app",
+  "logo": "https://yourapp.com/logo.png",
+  "status": "active",
+  "supportedCurrencies": ["BTC", "ETH", "USDT"],
+  "supportedNetworks": ["Bitcoin", "Ethereum", "Tron"]
+}
+```
+
+##### 3. Get Min/Max Limits
+**Endpoint:** `/get-min-max`
+
+Retrieves the minimum and maximum transaction limits for your app.
+
+**Request:**
+```json
+{
+  "fromCurrency": "BTC",
+  "toCurrency": "ETH",
+  "fromNetwork": "Bitcoin",
+  "toNetwork": "Ethereum"
+}
+```
+
+**Response:**
+```json
+{
+  "min": "0.001",
+  "max": "10",
+  "fromCurrency": "BTC"
+}
+```
+
+##### 4. Get Exchange Rate
+**Endpoint:** `/get-rate`
+
+Fetches the current exchange rate for a given currency pair.
+
+**Request:**
+```json
+{
+  "fromCurrency": "BTC",
+  "toCurrency": "ETH",
+  "fromNetwork": "Bitcoin",
+  "toNetwork": "Ethereum",
+  "amount": "1"
+}
+```
+
+**Response:**
+```json
+{
+  "rate": "15.5",
+  "fromAmount": "1",
+  "toAmount": "15.5",
+  "fromCurrency": "BTC",
+  "toCurrency": "ETH"
+}
+```
+
+##### 5. Create Transaction
+**Endpoint:** `/create-transaction`
+
+Initiates a new transaction.
+
+**Request:**
+```json
+{
+  "userId": "user123",
+  "fromCurrency": "BTC",
+  "toCurrency": "ETH",
+  "fromNetwork": "Bitcoin",
+  "toNetwork": "Ethereum",
+  "fromAmount": "1",
+  "toAmount": "15.5",
+  "type": "swap"
+}
+```
+
+**Response:**
+```json
+{
+  "transactionId": "tx123",
+  "payoutAddress": "0x1234...5678",
+  "network": "Bitcoin",
+  "amount": "1",
+  "userId": "user123",
+  "type": "swap",
+  "status": "pending"
+}
+```
+
+##### 6. Transaction Status
+**Endpoint:** `/status`
+
+Checks the status of a transaction.
+
+**Request:**
+```json
+{
+  "transactionId": "tx123"
+}
+```
+
+**Response:**
+```json
+{
+  "transactionId": "tx123",
+  "status": "completed",
+  "fromAmount": "1",
+  "toAmount": "15.5",
+  "fromCurrency": "BTC",
+  "toCurrency": "ETH",
+  "timestamp": "2024-07-15T12:34:56Z"
+}
+```
+
+
+##### 7. Transaction History
+**Endpoint:** `/history`
+
+Retrieves the transaction history for a user.
+
+**Request:**
+```json
+{
+  "userId": "user123",
+  "page": 1,
+  "limit": 10
+}
+```
+
+**Response:**
+```json
+{
+  "transactions": [
+    {
+      "transactionId": "tx123",
+      "fromAmount": "1",
+      "toAmount": "15.5",
+      "fromCurrency": "BTC",
+      "toCurrency": "ETH",
+      "status": "completed",
+      "timestamp": "2024-07-15T12:34:56Z"
+    },
+    // ... more transactions
+  ],
+  "totalCount": 45,
+  "currentPage": 1
+}
+```
+
+##### 7. Transaction History
+**Endpoint:** `/faq`
+
+Provides frequently asked questions and answers about your app.
+
+**Response:**
+```json
+{
+  "faqs": [
+    {
+      "question": "What is the minimum transaction amount?",
+      "answer": "The minimum transaction amount varies depending on the cryptocurrency. For BTC, it's 0.001 BTC."
+    },
+    // ... more FAQs
+  ]
+}
+
+
+### Intersend Custom UI
+
+Once you provide these APIs, Intersend will create a custom UI for your app within our ecosystem. Here's an example of how this UI might look:
+
+![Intersend Custom UI Example](path/to/your/image.png)
+
+Our UI is designed to be intuitive and user-friendly, guiding users through the process of using your app within the Intersend ecosystem. It typically includes sections for:
+
+- Selecting currencies and networks
+- Displaying exchange rates
+- Entering transaction amounts
+- Showing transaction status and history
+- Accessing FAQs and support
+
+### Integration Process
+
+1. Develop and host the required APIs on your backend.
+2. Provide Intersend with your API endpoints and any necessary authentication details.
+3. Intersend creates a new app in our ecosystem, integrating your APIs with our custom UI.
+4. We provide you with a test environment to ensure everything works correctly.
+5. After your approval and our final checks, your app goes live on the Intersend App Store.
+
+### Customization Options
+
+While our standard integration covers most use cases, we understand that some apps may have unique requirements. If you need additional customization, please let us know. We can explore options such as:
+
+- Adding app-specific fields to the transaction process
+- Modifying the user flow to better suit your app's requirements
+- Further customizing the UI to match your brand guidelines
+- Integrating additional APIs specific to your app's functionality
+
+By leveraging this "Bring Your Own APIs" integration method, you can maintain control over your backend logic while benefiting from Intersend's user base and intuitive interface. This approach offers a balance between customization and ease of integration, allowing you to quickly bring your app to the Intersend App Store.
+
+<Note>
+If you have any questions or need further assistance with the integration process, please don't hesitate to reach out to our development team.
+</Note>
+```
+
+
 ### Smart Contracts
 
 We use ERC-4337 smart contracts to facilitate secure and efficient transactions within the Intersend ecosystem.
