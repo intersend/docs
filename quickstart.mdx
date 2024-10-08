@@ -18,207 +18,141 @@ Developers can leverage Intersend APIs, Iframe, and, soon, an SDK to obtain nece
 
 ## Ways to Integrate
 
-### 1. Your Web Application Hosted by Yourself (such as iframe)
+### 1. You have an existing web app
 
-Your component (this could be an iframe or a webpage directly) will be hosted by you and accessed through the Intersend App Store.
+If you have an existing web application, we can embed your app as an iframe within the Intersend App Store. Your app will communicate with Intersend through a standardized messaging system.
 
 The iframe sends events, such as making a transaction with details to the deposit address. We capture and process these events on the backend and send the response back to the developer's iframe or web app, which then displays the details to the frontend.
 
-```plaintext
-User                  Developer's App (Accessed via Intersend)       Intersend Backend
- |                                   |                                   |
- |-- Access App on Store ----------->|                                   |
- |                                   |                                   |
- |                                   |- Send Event (e.g., transaction) ->|
- |                                   |                                   |
- |                                   |                                   |-- Process Event ------------------>|
- |                                   |                                   |
- |                                   |                                   |<-- Transaction Result -------------|
- |                                   |<-- Receive Event Result ----------|
- |                                   |                                   |
- |<-- Display Result ----------------|                                   |
+```mermaid
+sequenceDiagram
+    participant User
+    participant YourApp as Your App (iframe)
+    participant Intersend as Intersend Backend
+    participant Blockchain
+
+    User->>YourApp: Accesses App on Intersend Store
+    YourApp->>Intersend: Sends Event (e.g., transaction)
+    Intersend->>Blockchain: Processes Event
+    Blockchain-->>Intersend: Returns Result
+    Intersend-->>YourApp: Sends Event Result
+    YourApp->>User: Displays Result
 ```
 
-### 2. Intersend Iframe Integration
+#### Integration Steps
 
-You can utilize our iframe component that you can add to your website.
+1. Prepare Your App: Ensure your app can run within an iframe and handle postMessage communication.
 
-Our iframe is a light version of Intersend. It essentially provides a button that opens a pop-up window where users can log in, see their balance, approve transactions, and more.
-
-For each event, your app and our app will constantly share these events with each other and execute relevant functions. These events include obtaining certain permissions, creating payment records, processing transactions, and more.
-
-
-#### Example code snippet
+2. Install Required Dependencies
 
 ```javascript
-### Intersend Iframe Integration Snippet
+npm install viem
+# or
+yarn add viem
+```
 
-```html
-<iframe
-  width="375"
-  height="667"
-  src="https://embed.intersend.io/?ref=your_referral_id&utm_source=intersend_demo&theme=your_theme"
-  sandbox="allow-same-origin allow-popups allow-scripts allow-forms"
-/>
-<script>
-  window.onmessage = function(e) {
-    if (e.origin !== 'https://embed.intersend.io') {
-      return;
+3. Implement Transaction Preparation Function
+
+```javascript
+import { parseEther, encodeFunctionData } from 'viem';
+
+const prepareTransaction = (to, amount, tokenAddress) => {
+  // Encode the function call for a token transfer
+  const data = encodeFunctionData({
+    abi: [{
+      inputs: [
+        { name: 'recipient', type: 'address' },
+        { name: 'amount', type: 'uint256' }
+      ],
+      name: 'transfer',
+      type: 'function'
+    }],
+    args: [to, parseEther(amount)]
+  });
+
+  return {
+    to: tokenAddress,
+    data,
+    value: '0' // Use '0' for token transfers
+  };
+};
+```
+
+4. Implement Message Handling: Set up event listeners for messages from Intersend:
+
+```javascript
+useEffect(() => {
+  const handleMessage = (event) => {
+    if (event.origin !== "https://app.intersend.io") return;
+
+    const { id, result } = event.data;
+    if (result.success) {
+      console.log('Transaction successful:', result.data);
+      // Update your UI to show success
+    } else {
+      console.error('Transaction failed:', result.message);
+      // Update your UI to show failure
     }
+  };
 
-    const {
-      event,
-      data
-    } = e.data;
-
-    switch(event) {
-      case 'request_permission':
-        // Handle permission request with `data`
-        break;
-      case 'payment_intent':
-        // Handle payment intent with `data`
-        break;
-      case 'create_user':
-        // Handle user creation with `data`
-        break;
-      case 'generate_wallet_address':
-        // Handle wallet address generation with `data`
-        break;
-      default:
-        break;
-    }
-
-  }
-
-  // Example of sending an event to the iframe
-  const iframe = document.querySelector('iframe');
-  iframe.contentWindow.postMessage({
-    event: 'init',
-    data: {
-      userId: 'your_user_id',
-      sessionId: 'your_session_id'
-    }
-  }, 'https://embed.intersend.io');
-</script>
+  window.addEventListener('message', handleMessage);
+  return () => window.removeEventListener('message', handleMessage);
+}, []);
 ```
 
+5. Send Transaction
 
-```plaintext
-User                   Web App                Intersend Iframe            Intersend Wallet
- |                        |                         |                           |
- |-- Access Web App ----->|                         |                           |
- |                        |-- Open Iframe --------->|                           |
- |                        |                         |                           |
- |                        |                         |-- Log In User ----------->|
- |                        |                         |                           |
- |                        |                         |<-- Display Balance -------|
- |                        |                         |                           |
- |                        |                         |-- Approve Transaction --->|
- |                        |                         |                           |
- |                        |                         |<-- Share Event -----------|
- |                        |                         |                           |
- |<-- Transaction Result--|                         |                           |
+```javascript
+const sendTransaction = (recipient, amount, tokenAddress) => {
+  const txData = prepareTransaction(recipient, amount, tokenAddress);
+
+  window.parent.postMessage({
+    method: 'sendTransactions',
+    params: {
+      txs: [txData],
+      chainId: '137' // Replace with your target chain ID
+    },
+    id: `tx-${Date.now()}` // Unique ID for this transaction
+  }, 'https://app.intersend.io');
+};
 ```
 
-## APIs
+6. Update your UI
 
-With our APIs, you can create user wallets and enable them to receive any cryptocurrency on any chain, including EVM, Bitcoin, Solana, and many others.
+```javascript
+// the following snippet is provided as a reference
 
-### Create User Wallet
+return (
+  <div>
+    <input 
+      type="text" 
+      placeholder="Recipient Address" 
+      onChange={(e) => setRecipient(e.target.value)} 
+    />
+    <input 
+      type="text" 
+      placeholder="Amount" 
+      onChange={(e) => setAmount(e.target.value)} 
+    />
+    <button onClick={() => sendTransaction(recipient, amount, tokenAddress)}>
+      Send Transaction
+    </button>
+    {/* Display transaction status here */}
+  </div>
+);
 
-```code
-curl -X POST https://node.intersend.io/v1/appstore/create-user \
--H "Authorization: Bearer authToken" \
--H "Content-Type: application/json" \
--d '{
-  "email": "user@example.com"
-  // or "walletAddress"
-}'
-```
+7. The app goes through our testing and approval process.
 
-This endpoint returns a link for the user to log in to the Intersend dashboard.
-
-
-```plaintext
-Developer              Intersend API              Intersend Database
- |                        |                           |
- |-- Create User Request->|                           |
- |                        |                           |
- |<-- User Login Link ----|                           |
- |                        |                           |
- |                        |-- Store User Data ------->|
- ```
-
- ### Generate Wallet Address
-
- ```code
- curl -X POST https://node.intersend.io/v1/appstore/generate-wallet-address \
--H "Authorization: Bearer authToken" \
--H "Content-Type: application/json" \
--d '{
-  "email": "user@example.com",
-  "chain": "BTC",
-  "crypto": "BTC"
-}'
-```
-
-This endpoint returns a wallet address of the selected currency and a payment URI. If the user deposits funds to this address, their Intersend account will be deposited with the equivalent amount of USDT.
-
-The user can sign into their Intersend account and access the funds.
+8. Once approved, your app becomes available to users in the Intersend App Store.
 
 
-## Event Types
-
-### request_permission
-This is the very initial step your app needs to ask the user. Typically, this is a one-time event for each user depending on your use case. You'd pass some security parameters such as:
-
-- `max_limit`: The maximum amount limit your app will use.
-- `access_expiry`: The expiration time for the access.
-- `user_wallet_address`: The wallet address of the user.
-- `domain_whitelist`: The list of domains that are allowed to access the permissions. (Your originating domain)
-
-### payment_intent
-You can pass the information for payment such as the target wallet, amount, chain, and cryptocurrency (chain-agnostic). We then validate your permissions, process the transaction, and send the details through an event callback.
-
-- `target_wallet`: The wallet address where the payment will be sent.
-- `amount`: The amount of cryptocurrency to be sent.
-- `chain`: The blockchain network (e.g., Ethereum, Bitcoin).
-- `crypto`: The type of cryptocurrency (e.g., BTC, ETH).
-
-### create_user
-Initiate the process to create a new user within the Intersend ecosystem. This event sets up the necessary user profile.
-
-- `email`: The email address of the user.
-- `wallet_address`: The wallet address of the user (optional if email is provided).
-
-### generate_wallet_address
-Generate a new wallet address for the user on a specified blockchain. This event returns a wallet address and a payment URI.
-
-- `email`: The email address of the user.
-- `chain`: The blockchain network for the wallet (e.g., BTC, ETH).
-- `crypto`: The type of cryptocurrency for the wallet (e.g., BTC, ETH).
-
-### transaction_status
-Check the status of a previously initiated transaction. This event provides updates on whether the transaction was successful, pending, or failed.
-
-- `transaction_id`: The unique identifier of the transaction.
-
-### revoke_permission
-Revoke previously granted permissions from a user. This event can be used to ensure security and compliance with user requests.
-
-- `user_wallet_address`: The wallet address of the user.
-- `permission_id`: The identifier of the permission to be revoked.
-
-
-These events provide a comprehensive set of interactions that developers can use to build robust applications within the Intersend App Store ecosystem.
-
-### 3. Bring Your Own APIs
+### 2. Bring Your Own APIs
 
 Developers can leverage Intersend's custom-made branded UI by providing their own APIs. This integration method allows you to maintain your backend while taking advantage of Intersend's user-friendly interface and user base.
 
 #### How It Works
 
-1. You develop and host the required APIs (detailed below).
+1. You develop and host the required APIs for your app (detailed below).
 2. You provide Intersend with your API endpoints and any necessary authentication details.
 3. Intersend creates a new app within our ecosystem, integrating your APIs with our custom UI.
 4. The app goes through our testing and approval process.
