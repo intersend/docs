@@ -30,8 +30,7 @@
       "group": "Get Started",
       "pages": [
         "overview",
-        "quickstart",
-        "rainbowkit"
+        "quickstart"
       ]
     }
   ],
