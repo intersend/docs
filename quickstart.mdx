@@ -64,17 +64,20 @@ Provider-specific instructions:
 
 ## How It Works
 
-```mermaid sequenceDiagram
-participant User participant
-YourApp participant
-Intersend participant
-Blockchain User->>YourApp: Interacts with app
-YourApp->>Intersend: Auto-connects via Safe connector
-YourApp->>Intersend: Relays transaction via postMessage
-Intersend->>Intersend: Processes
-Intersend->>Blockchain: Submits transaction
-Blockchain-->>Intersend: Confirms transaction
-Intersend-->>YourApp: Returns response
+```mermaid
+sequenceDiagram
+    participant User
+    participant YourApp
+    participant Intersend
+    participant Blockchain
+
+    User->>YourApp: Interacts with app
+    YourApp->>Intersend: Auto-connects via Safe connector
+    YourApp->>Intersend: Relays transaction via postMessage
+    Intersend->>Intersend: Processes via ERC-4337
+    Intersend->>Blockchain: Submits transaction
+    Blockchain-->>Intersend: Confirms transaction
+    Intersend-->>YourApp: Returns response
 ```
 
 1. User interacts with your app within Intersend
@@ -83,7 +86,7 @@ Intersend-->>YourApp: Returns response
 4. Intersend processes transactions using ERC-4337
 5. Responses are sent back to your app
 
-## Get Listed Once integrated, contact us for review and approval:
+### Get Listed Once integrated, contact us for review and approval:
 
 - Email: hello@intersend.io
 - Telegram: @erturkarda
