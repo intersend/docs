@@ -89,20 +89,31 @@ function AppContainer({ appUrl, walletAddress, rpcUrl }) {
 }
 ```
 
-### 4. Handle Messages
-```javascript
+### 4. Message Handling & Transactions
+```typescript
 import { sendMessageToIframe } from 'universal-portability';
 
-const handleMessages = (event) => {
+// Setup message listener when component mounts
+useEffect(() => {
+  window.addEventListener('message', handleMessages);
+  return () => window.removeEventListener('message', handleMessages);
+}, []);
+
+// Main message handler
+const handleMessages = async (event: MessageEvent) => {
+  // Validate message origin for security
+  if (event.origin !== 'https://app.intersend.io') return;
+  
   const { type, payload, id } = event.data;
   
   switch (type) {
     case 'REQUEST_WALLET_INFO':
+      // Respond with wallet details
       sendMessageToIframe({
         type: 'WALLET_INFO',
         payload: {
           address: walletAddress,
-          chainId: '0x89',
+          chainId: '0x89', // Polygon
           isConnected: true
         },
         id
@@ -110,7 +121,47 @@ const handleMessages = (event) => {
       break;
       
     case 'RPC_REQUEST':
-      // Handle transaction requests through your wallet's infrastructure
+      if (payload.method === 'eth_sendTransaction') {
+        try {
+          // Transaction parameters from the app
+          const txParams = payload.params[0];
+          
+          // Show your wallet's native transaction UI
+          const approved = await showTransactionApproval(txParams);
+          
+          if (approved) {
+            // Sign and send transaction using your wallet's infrastructure
+            const txHash = await handleTransaction(txParams);
+            
+            // Respond with transaction hash
+            sendMessageToIframe({
+              type: 'RPC_RESPONSE',
+              payload: txHash,
+              id
+            });
+          } else {
+            // User rejected - send error response
+            sendMessageToIframe({
+              type: 'RPC_RESPONSE',
+              error: {
+                code: 4001,
+                message: 'User rejected transaction'
+              },
+              id
+            });
+          }
+        } catch (error) {
+          // Handle any errors during transaction
+          sendMessageToIframe({
+            type: 'RPC_RESPONSE',
+            error: {
+              code: 4000,
+              message: error.message
+            },
+            id
+          });
+        }
+      }
       break;
   }
 };
