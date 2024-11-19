@@ -1,11 +1,8 @@
 ---
-title: 'Quickstart for WaaS'
+title: 'Integrate dApps Into Your Wallet'
 description: 'Offer utility-based apps to your users'
 slug: '/waas'
 ---
-
-# Integrate dApps Into Your Wallet
-
 Transform your wallet into a powerful Web3 gateway without the overhead of maintaining a dApp store. Intersend enables you to effortlessly embed popular Web3 applications directly into your wallet interface, providing your users with a seamless, secure experience.
 
 ## Overview
@@ -27,7 +24,7 @@ sequenceDiagram
     participant API as Intersend API
     participant App as dApp (iframe)
     
-    Note over User,API: Initial Setup
+    Note over User,API: Load Apps
     User->>Wallet: Opens Wallet Provider
     Wallet->>API: GET /v1/intersend/interspace/apps
     API-->>Wallet: Return available apps
