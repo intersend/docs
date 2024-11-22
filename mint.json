@@ -27,14 +27,25 @@
   },
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "About Intersend",
       "pages": [
-        "overview",
-        "quickstart"
+        "overview"
       ]
     },
     {
-      "group": "For Wallet Providers",
+      "group": "For Apps",
+      "pages": [
+        {
+          "group" : "Add your dApp to Intersend",
+          "pages": [
+            "apps/overview",
+        "apps/privy"
+          ]
+      }
+      ]
+    },
+    {
+      "group": "For Wallet Providers/ WaaS",
       "pages": [
         "overview-waas"
       ]
