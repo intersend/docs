@@ -39,7 +39,8 @@
           "group" : "Add your dApp to Intersend",
           "pages": [
             "apps/overview",
-        "apps/privy"
+        "apps/privy",
+        "apps/dynamic"
           ]
       }
       ]
