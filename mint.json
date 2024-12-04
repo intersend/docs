@@ -54,9 +54,5 @@
   ],
   "footerSocials": {
     "x": "https://x.com/intersend_io"
-  },
-  "metadata": {
-    "og:image": "https://storage.googleapis.com/external-assets-intersend/Emblem.png",
-    "twitter:image": "https://storage.googleapis.com/external-assets-intersend/Emblem.png"
-}
+  }
 }
