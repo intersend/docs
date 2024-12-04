@@ -2,10 +2,10 @@
   "$schema": "https://mintlify.com/schema.json",
   "name": "Intersend Support Centre",
   "logo": {
-    "dark": "https://intersend.io/favicon.ico",
-    "light": "https://intersend.io/favicon.ico"
+    "dark": "https://storage.googleapis.com/external-assets-intersend/Emblem.png",
+    "light": "https://storage.googleapis.com/external-assets-intersend/Emblem.png"
   },
-  "favicon": "https://intersend.io/favicon.ico",
+  "favicon": "https://storage.googleapis.com/external-assets-intersend/Emblem.png",
   "colors": {
     "primary": "#0D9373",
     "light": "#07C983",
