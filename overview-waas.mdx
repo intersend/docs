@@ -62,29 +62,48 @@ The SDK implements a secure messaging protocol between the embedded app and your
 npm install universal-portability
 ```
 
-### 2. Fetch Available Apps
+### 2. Add Universal Portability Provider
+Wrap your application with the UniversalPortabilityProvider. Place it within your existing providers:
+
 ```javascript
-const fetchApps = async () => {
-  const response = await fetch('https://api.intersend.com/v1/intersend/interspace/apps', {
-    headers: {
-      'x-api-key': 'YOUR_API_KEY'
-    }
-  });
-  const apps = await response.json();
-};
+import { UniversalPortabilityProvider } from 'universal-portability';
+
+function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <OtherProviders>
+        <UniversalPortabilityProvider>
+          {/* Your app components */}
+        </UniversalPortabilityProvider>
+      </OtherProviders>
+    </WagmiProvider>
+  );
+}
 ```
 
-### 3. Embed an App
+### 3. Display and Port Apps into your wallet
 ```javascript
-import { Port } from 'universal-portability';
+import { Port, usePortableApps } from 'universal-portability';
 
-function AppContainer({ appUrl, walletAddress, rpcUrl }) {
+function AppContainer({ walletAddress }) {
+
+  const { apps } = usePortableApps(); // fetch all the apps
+
   return (
-    <Port
-      src={`https://intersend.io/${app.slug}`}
-      accountAddress={walletAddress}
-      rpcUrl={rpcUrl}
-    />
+    <div>
+      {apps.map(app => (
+        <div key={app.id}>
+          <img src={app.logo} alt={app.name} />
+          <h3>{app.name}</h3>
+          
+          {/* Port component handles the app embedding and account injection */}
+          <Port
+            src={app.url}
+            accountAddress={walletAddress}
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 ```
