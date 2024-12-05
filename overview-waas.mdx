@@ -81,14 +81,84 @@ function App() {
 }
 ```
 
-### 3. Display and Port Apps into your wallet
+### 3. Message Handling & Transactions
+Create a message handler to manage communication between your wallet and ported apps. This handler processes transaction requests and wallet interactions.
+
+```typescript
+// src/handlers/messageHandler.ts
+import { sendMessageToIframe } from 'universal-portability';
+
+export const createMessageHandler = (walletAddress: string) => {
+  return async (event: MessageEvent) => {
+    // Security: Validate message origin
+    if (event.origin !== 'https://app.intersend.io') return;
+    
+    const { type, payload, id } = event.data;
+    
+    switch (type) {
+      case 'REQUEST_WALLET_INFO':
+        sendMessageToIframe({
+          type: 'WALLET_INFO',
+          payload: {
+            address: walletAddress,
+            chainId: '0x89', // Your wallet's chain
+            isConnected: true
+          },
+          id
+        });
+        break;
+        
+      case 'RPC_REQUEST':
+        if (payload.method === 'eth_sendTransaction') {
+          try {
+            // Your wallet's transaction handling
+            const txHash = await handleWalletTransaction(payload.params[0]);
+            sendMessageToIframe({
+              type: 'RPC_RESPONSE',
+              payload: txHash,
+              id
+            });
+          } catch (error) {
+            sendMessageToIframe({
+              type: 'RPC_RESPONSE',
+              error: {
+                code: 4000,
+                message: error.message
+              },
+              id
+            });
+          }
+        }
+        break;
+    }
+  };
+};
+```
+
+### 4. Display and Port Apps into your wallet
 ```javascript
 import { Port, usePortableApps } from 'universal-portability';
+import { createMessageHandler } from '../handlers/messageHandler';
+
+import { useEffect } from 'react';
 
 function AppContainer({ walletAddress }) {
 
+   // 1. Fetch apps
   const { apps } = usePortableApps(); // fetch all the apps
 
+
+  // 2. Set up message handling
+  useEffect(() => {
+    const handler = createMessageHandler(walletAddress);
+    window.addEventListener('message', handler);
+    
+    return () => {
+      window.removeEventListener('message', handler);
+    };
+  }, [walletAddress]);
+
+  // 3. Render apps with Port component
   return (
     <div>
       {apps.map(app => (
@@ -96,7 +166,6 @@ function AppContainer({ walletAddress }) {
           <img src={app.logo} alt={app.name} />
           <h3>{app.name}</h3>
           
-          {/* Port component handles the app embedding and account injection */}
           <Port
             src={app.url}
             accountAddress={walletAddress}
@@ -106,84 +175,6 @@ function AppContainer({ walletAddress }) {
     </div>
   );
 }
-```
-
-### 4. Message Handling & Transactions
-```typescript
-import { sendMessageToIframe } from 'universal-portability';
-
-// Setup message listener when component mounts
-useEffect(() => {
-  window.addEventListener('message', handleMessages);
-  return () => window.removeEventListener('message', handleMessages);
-}, []);
-
-// Main message handler
-const handleMessages = async (event: MessageEvent) => {
-  // Validate message origin for security
-  if (event.origin !== 'https://app.intersend.io') return;
-  
-  const { type, payload, id } = event.data;
-  
-  switch (type) {
-    case 'REQUEST_WALLET_INFO':
-      // Respond with wallet details
-      sendMessageToIframe({
-        type: 'WALLET_INFO',
-        payload: {
-          address: walletAddress,
-          chainId: '0x89', // Polygon
-          isConnected: true
-        },
-        id
-      });
-      break;
-      
-    case 'RPC_REQUEST':
-      if (payload.method === 'eth_sendTransaction') {
-        try {
-          // Transaction parameters from the app
-          const txParams = payload.params[0];
-          
-          // Show your wallet's native transaction UI
-          const approved = await showTransactionApproval(txParams);
-          
-          if (approved) {
-            // Sign and send transaction using your wallet's infrastructure
-            const txHash = await handleTransaction(txParams);
-            
-            // Respond with transaction hash
-            sendMessageToIframe({
-              type: 'RPC_RESPONSE',
-              payload: txHash,
-              id
-            });
-          } else {
-            // User rejected - send error response
-            sendMessageToIframe({
-              type: 'RPC_RESPONSE',
-              error: {
-                code: 4001,
-                message: 'User rejected transaction'
-              },
-              id
-            });
-          }
-        } catch (error) {
-          // Handle any errors during transaction
-          sendMessageToIframe({
-            type: 'RPC_RESPONSE',
-            error: {
-              code: 4000,
-              message: error.message
-            },
-            id
-          });
-        }
-      }
-      break;
-  }
-};
 ```
 
 ### Message Protocol
