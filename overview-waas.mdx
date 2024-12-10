@@ -49,10 +49,10 @@ sequenceDiagram
 
 The SDK implements a secure messaging protocol between the embedded app and your wallet:
 
-- Apps run in isolated iframes with specific permissions
-- All cryptographic operations occur within your wallet's secure environment
-- Transaction requests are handled by your wallet's native signing flow
-- No direct access to user's private keys or sensitive data
+- Apps run in isolated iframes
+- All signing occurs in your wallet's secure environment
+- No direct access to private keys
+- Origin validation for all messages
 
 
 ## Quick Integration Guide
@@ -62,8 +62,8 @@ The SDK implements a secure messaging protocol between the embedded app and your
 npm install universal-portability
 ```
 
-### 2. Add Universal Portability Provider
-Wrap your application with the UniversalPortabilityProvider. Place it within your existing providers:
+### 2. Set Up Provider
+Wrap your application with the UniversalPortabilityProvider:
 
 ```javascript
 import { UniversalPortabilityProvider } from 'universal-portability';
@@ -71,105 +71,113 @@ import { UniversalPortabilityProvider } from 'universal-portability';
 function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
-      <OtherProviders>
-        <UniversalPortabilityProvider>
-          {/* Your app components */}
-        </UniversalPortabilityProvider>
-      </OtherProviders>
+      <UniversalPortabilityProvider>
+        {/* Your app */}
+      </UniversalPortabilityProvider>
     </WagmiProvider>
   );
 }
 ```
 
-### 3. Message Handling & Transactions
-Create a message handler to manage communication between your wallet and ported apps. This handler processes transaction requests and wallet interactions.
+### 3. Implement Message Handlers
+
+Create these two hooks to handle communication between your wallet and embedded dApps:
+
+<Accordion title="src/hooks/useMessageHandler.ts">
+```typescript
+import { useEffect } from 'react';
+import { useUniversalPortability } from 'universal-portability';
+import { sendTransaction, signMessage } from '@wagmi/core';
+import { config } from '../wagmi';
+import { hexToString } from 'viem';
+
+export interface MessageHandlerConfig {
+  walletAddress: string;
+  chainId: number;
+}
+
+export function useMessageHandler({ walletAddress, chainId }: MessageHandlerConfig) {
+  const { sendMessageToIFrame } = useUniversalPortability();
+
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      const { type, payload, requestId } = event.data;
+
+      try {
+        switch (type) {
+          case 'INTERSEND_CONNECT_REQUEST':
+            sendMessageToIFrame(
+              {
+                type: 'INTERSEND_CONNECT_RESPONSE',
+                payload: {
+                  address: walletAddress,
+                  chainId,
+                  isConnected: true,
+                }
+              }
+            );
+            break;
+
+          case 'SIGN_MESSAGE_REQUEST':
+            // Handle message signing
+            break;
+
+          case 'TRANSACTION_REQUEST':
+            // Handle transaction requests
+            break;
+        }
+      } catch (error: any) {
+        // Error handling
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [walletAddress, chainId, sendMessageToIFrame]);
+}
+```
+</Accordion>
+
+<Accordion title="src/hooks/usePortHandler.ts">
+```typescript
+import { useAccount, useChainId } from 'wagmi';
+import { useMessageHandler } from './useMessageHandler';
+
+export function usePortHandler() {
+  const { address } = useAccount();
+  const chainId = useChainId();
+
+  useMessageHandler({
+    walletAddress: address!,
+    chainId: chainId!
+  });
+
+  return {
+    isReady: Boolean(address && chainId)
+  };
+}
+```
+</Accordion>
+
+### 4. Create dApp Store Container
+
+Display available dApps to your users:
 
 ```typescript
-// src/handlers/messageHandler.ts
-import { sendMessageToIframe } from 'universal-portability';
-
-export const createMessageHandler = (walletAddress: string) => {
-  return async (event: MessageEvent) => {
-    // Security: Validate message origin
-    if (event.origin !== 'https://app.intersend.io') return;
-    
-    const { type, payload, id } = event.data;
-    
-    switch (type) {
-      case 'REQUEST_WALLET_INFO':
-        sendMessageToIframe({
-          type: 'WALLET_INFO',
-          payload: {
-            address: walletAddress,
-            chainId: '0x89', // Your wallet's chain
-            isConnected: true
-          },
-          id
-        });
-        break;
-        
-      case 'RPC_REQUEST':
-        if (payload.method === 'eth_sendTransaction') {
-          try {
-            // Your wallet's transaction handling
-            const txHash = await handleWalletTransaction(payload.params[0]);
-            sendMessageToIframe({
-              type: 'RPC_RESPONSE',
-              payload: txHash,
-              id
-            });
-          } catch (error) {
-            sendMessageToIframe({
-              type: 'RPC_RESPONSE',
-              error: {
-                code: 4000,
-                message: error.message
-              },
-              id
-            });
-          }
-        }
-        break;
-    }
-  };
-};
-```
-
-### 4. Display and Port Apps into your wallet
-```javascript
 import { Port, usePortableApps } from 'universal-portability';
-import { createMessageHandler } from '../handlers/messageHandler';
 
-import { useEffect } from 'react';
+function DAppStoreContainer() {
+  const { apps } = usePortableApps();
 
-function AppContainer({ walletAddress }) {
-
-   // 1. Fetch apps
-  const { apps } = usePortableApps(); // fetch all the apps
-
-
-  // 2. Set up message handling
-  useEffect(() => {
-    const handler = createMessageHandler(walletAddress);
-    window.addEventListener('message', handler);
-    
-    return () => {
-      window.removeEventListener('message', handler);
-    };
-  }, [walletAddress]);
-
-  // 3. Render apps with Port component
   return (
-    <div>
+    <div className="dapp-grid">
       {apps.map(app => (
-        <div key={app.id}>
+        <div key={app.id} className="dapp-card">
           <img src={app.logo} alt={app.name} />
           <h3>{app.name}</h3>
-          
-          <Port
-            src={app.url}
-            accountAddress={walletAddress}
-          />
+          <button onClick={() => navigateToApp(app)}>
+            Launch App
+          </button>
         </div>
       ))}
     </div>
@@ -177,12 +185,43 @@ function AppContainer({ walletAddress }) {
 }
 ```
 
-### Message Protocol
-The SDK uses a secure postMessage protocol for communication:
-- `REQUEST_WALLET_INFO`: App requests wallet connection details
-- `WALLET_INFO`: Wallet responds with account information
-- `RPC_REQUEST`: App requests transaction signing or other RPC methods
-- `RPC_RESPONSE`: Wallet responds with transaction result
+### 5. Render dApp Interface
+
+Create a container to load and display the selected dApp:
+
+```typescript
+import { Port } from 'universal-portability';
+import { useAccount, useChainId } from 'wagmi';
+
+import { usePortHandler } from '../hooks/usePortHandler';
+
+function AppContainer({ app }) {
+  const rpcURL = process.env.RPC_URL;
+  const { address } = useAccount();
+
+  // enable postMessage communication
+  usePortHandler();
+
+  return (
+    <Port
+      src={`https://app.intersend.io/apps/${app.slug}`}
+      address={address}
+      rpcUrl={rpcURL}
+      height="400px"
+      width="800px"
+    />
+  );
+}
+```
+
+## Message Protocol
+
+The SDK uses a secure postMessage protocol with these main events:
+
+- `INTERSEND_CONNECT_REQUEST`: Initial wallet connection request
+- `SIGN_MESSAGE_REQUEST`: Request to sign a message
+- `TRANSACTION_REQUEST`: Request to send a transaction
+- `*_RESPONSE`: Corresponding response events
 
 All sensitive operations (signing, approvals) are handled by your wallet's existing security infrastructure, ensuring a safe and consistent user experience.
 
