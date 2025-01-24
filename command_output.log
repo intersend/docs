@@ -1,0 +1,89 @@
+
+Command: shopt -s histappend
+Output:
+
+Exit Code: 0
+----
+Command: pwd
+Output:
+/Users/ardaerturk/Documents/GitHub/docs
+Exit Code: 0
+----
+Command: npm run dev
+Output:
+npm error code ENOENT
+npm error syscall open
+npm error path /Users/ardaerturk/Documents/GitHub/docs/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/Users/ardaerturk/Documents/GitHub/docs/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /Users/ardaerturk/.npm/_logs/2025-01-24T20_21_46_784Z-debug-0.log
+Exit Code: 254
+----
+Command: mint dev
+Output:
+bash: mint: command not found
+Exit Code: 127
+----
+Command: npm i
+Output:
+npm error code ENOENT
+npm error syscall open
+npm error path /Users/ardaerturk/Documents/GitHub/docs/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/Users/ardaerturk/Documents/GitHub/docs/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /Users/ardaerturk/.npm/_logs/2025-01-24T20_22_21_009Z-debug-0.log
+Exit Code: 254
+----
+Command: npm i -g mintlify
+Output:
+
+changed 651 packages in 5s
+
+299 packages are looking for funding
+  run `npm fund` for details
+Exit Code: 0
+----
+Command: mintlify dev
+Output:
+- Preparing local Mintlify instance...
+✖ ENOENT: no such file or directory, open '/Users/ardaerturk/Documents/GitHub/docs/https:/storage.googleapis.com/external-assets-intersend/Emblem.png'
+Exit Code: 1
+----
+Command: mintlify dev
+Output:
+- Preparing local Mintlify instance...
+✖ ENOENT: no such file or directory, open '/Users/ardaerturk/Documents/GitHub/docs/https:/storage.googleapis.com/external-assets-intersend/Emblem.png'
+Exit Code: 1
+----
+Command: mintlify dev
+Output:
+- Preparing local Mintlify instance...
+✖ EISDIR: illegal operation on a directory, read
+Exit Code: 1
+----
+Command: mintlify dev
+Output:
+- Preparing local Mintlify instance...
+✖ EISDIR: illegal operation on a directory, read
+Exit Code: 1
+----
+Command: mintlify dev
+Output:
+- Preparing local Mintlify instance...
+🚨 Invalid mint.json:
+#.favicon: Favicon cannot be an .ico file
+✖ Prebuild step failed
+Exit Code: 1
+----
+Command: mintlify dev
+Output:
+- Preparing local Mintlify instance...
+🚨 Invalid mint.json:
+#.favicon: This field is required
+✖ Prebuild step failed
+Exit Code: 1
+----

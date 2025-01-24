@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/schema.json",
   "name": "Intersend Developer Portal",
-  "logo": {
+"logo": {
     "dark": "https://storage.googleapis.com/external-assets-intersend/Emblem.png",
     "light": "https://storage.googleapis.com/external-assets-intersend/Emblem.png"
   },
@@ -26,12 +26,7 @@
     "url": "https://app.intersend.io"
   },
   "navigation": [
-    {
-      "group": "About Intersend",
-      "pages": [
-        "overview"
-      ]
-    },
+
     {
       "group": "For Apps",
       "pages": [
@@ -39,6 +34,7 @@
           "group" : "Add your dApp to Intersend",
           "pages": [
             "apps/overview",
+            "apps/safe",
         "apps/privy",
         "apps/dynamic"
           ]
@@ -48,7 +44,25 @@
     {
       "group": "For Wallet Providers/ WaaS",
       "pages": [
-        "overview-waas"
+        {
+          "group" : "Integrate dApps Into Your Wallet",
+          "pages": [
+            "waas/overview-waas",
+            "waas/quickstart-waas"
+          ]
+      }
+      ]
+    },
+    {
+      "group": "For Auth Providers",
+      "pages": [
+        {
+          "group" : "Turn ecosystem apps into embeddable apps",
+          "pages": [
+            "auth-providers/overview-auth",
+            "auth-providers/integration-auth"
+          ]
+      }
       ]
     }
   ],

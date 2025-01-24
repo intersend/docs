@@ -1,0 +1,65 @@
+---
+title: 'Safe Integration'
+description: 'Add your Safe App to Intersend.'
+slug: '/safe'
+---
+
+## Prerequisite
+
+- Your dApp uses **Wagmi** for wallet interactions.
+- If using an auth provider (e.g. Privy, Dynamic), refer to its dedicated Intersend guide.
+
+---
+
+## Integration Steps (Wagmi + Safe Example)
+
+Below is the most common scenario: **you already use Wagmi** and need to ensure the Safe Connector is present so Intersend can auto-connect. If your app relies on Privy or Dynamic for auth, please see those guides.
+
+### 1. Add (or Confirm) Safe Connector
+
+Add the Safe connector to your Wagmi config. If your app already uses the Safe connector, you can skip this step.
+
+```ts
+import { createConfig, http } from 'wagmi'
+import { mainnet, sepolia, polygon } from 'wagmi/chains'
+import { createClient } from 'viem'
+import { safe } from 'wagmi/connectors'
+
+export const config = createConfig({
+  chains: [mainnet, sepolia, polygon],
+  connectors: [
+    safe(), // Add Safe connector
+    // ... other connectors
+  ],
+  client({ chain }) {
+    return createClient({ chain, transport: http() })
+  },
+})
+```
+
+### 2. Whitelist Intersend Domain
+
+Since Intersend loads your dApp in an iframe and communicates via postMessage, you must allow the following domains:
+
+Required domains:
+
+- `intersend.io`
+- `*.intersend.io`
+
+If you’re using a third-party authentication provider, ensure they also whitelist these domains to enable secure cross-domain communication.
+
+### 3. Verify App Behavior Inside Intersend
+
+1. **Open [Sandbox](https://app.intersend.io/apps/sandbox)** and paste your web app’s URL into the address bar of the Intersend browser.
+2. **Auto-connect** should kick in; Intersend will inject the user’s wallet data into your app.
+3. **Test transaction or signing flows** to confirm everything relays properly.
+
+### 4. Get Listed
+
+Once integrated, submit your app for review:
+- Email: hello@intersend.io
+- Telegram: @erturkarda
+
+## Need Help?
+
+- [Contact Intersend Support](mailto:hello@intersend.io)

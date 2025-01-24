@@ -1,94 +1,84 @@
 ---
 title: 'Overview'
-description: 'Offer seamless experience to your users'
+description: 'Offer a seamless experience to your users'
 slug: '/overview-apps'
 ---
 
-Intersend App Store is a non-custodial app store that enables seamless Web3 interactions through unified smart accounts. This guide explains how to make your existing web app compatible with Intersend.
+Intersend is a non-custodial app store for crypto apps that enables seamless Web3 interactions through a unified experience. The fundamental goal is: **make it simple for your app and your users to connect, sign, and transact**.
 
-## Overview
+The integration enables seamless communication between your app and Intersend through:
 
-When integrated, your app will automatically connect to users' Intersend smart accounts and relay transactions through our infrastructure, providing:
+- **Auto Connection**: Automatically connects user's wallet with your app on page load with SIWE authentication
+- **Message Relay**: Handles transaction signing, message signing, and contract interactions through secure postMessage communication
+- **Non-Intrusive**: Only activates when your app is accessed through Intersend, preserving your existing functionality
 
-- Seamless transaction handling via ERC-4337
-- Unified wallet experience
-- Gas abstraction capabilities
-- Multi-chain support
+Below is a high-level guide for dApps that want to be listed in Intersend and auto-connect with users’ wallets via Intersend.
 
-If you're working with an authentication provider, we offer specific integration guides for:
+---
 
-- [Privy Integration Guide](https://intersend.mintlify.app/apps/privy)
-- [Dynamic Integration Guide](https://intersend.mintlify.app/apps/dynamic)
-- Magic (Coming soon)
-- Web3Auth (Coming soon)
+## Key Concepts
 
-## Prerequisites
+### Connectors
 
-- Existing web app using wagmi
-- Support for Safe connector
+A “connector” is a small integration layer that allows Intersend to inject a user’s wallet/account into your dApp. We support multiple connector approaches, including:
 
+- **Safe Connector** (common in Wagmi-powered apps)
+- **Custom connectors** for:
+  - [Privy](https://intersend.mintlify.app/apps/privy)
+  - [Dynamic](https://intersend.mintlify.app/apps/dynamic)
+- Other authentication providers are in progress (Thirdweb, web3-onboard, Magic, Web3Auth, etc.) or can be integrated similarly.
 
-## Integration Steps
+If your dApp already has a Safe Connector enabled in Wagmi, you’re effectively compatible with Intersend’s “Safe flow” right away. Otherwise, check our [Privy Guide](https://intersend.mintlify.app/apps/privy) or [Dynamic Guide](https://intersend.mintlify.app/apps/dynamic) for more specific integration steps.
 
-### 1. Add Safe Connector
+### iFrame & PostMessage
 
-Add the Safe connector to your wagmi config if not already present:
+Intersend loads your dApp within an iframe, using secure `postMessage` events to:
 
-```typescript
-import { createConfig, http } from 'wagmi'
-import { mainnet, sepolia, polygon } from 'wagmi/chains'
-import { createClient } from 'viem'
-import { safe } from 'wagmi/connectors'
+1. **Auto-connect** the user’s wallet/account
+2. **Relay transactions** for user signatures
+3. **Share** signed data, chain switches, and transaction confirmations back to your dApp
 
-export const config = createConfig({
-    chains: [mainnet, sepolia, polygon],
-    connectors: [
-      safe(), // Add Safe connector
-      // ... other connectors
-    ],
-    client({ chain }) {
-      return createClient({ chain, transport: http() })
-    },
-})
-```
-
-### 2. Whitelist Intersend Domain
-
-Add Intersend domains to your authentication provider's allowed origins. This enables iframe communication between your app and Intersend.
-
-Required domains:
-
-- `intersend.io`
-- `*.intersend.io`
-
+Because of this, you may need to **whitelist Intersend’s domain** so your site can be embedded in an iframe and to allow cross-domain communication.
 
 ## How It Works
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant YourApp
-    participant Intersend
-    participant Blockchain
+    participant Wallet as Wallet App
+    participant Intersend as Intersend
+    participant App as Your App
 
-    User->>YourApp: Interacts with app
-    YourApp->>Intersend: Auto-connects via Safe connector
-    YourApp->>Intersend: Relays transaction via postMessage
-    Intersend->>Intersend: Processes via ERC-4337
-    Intersend->>Blockchain: Submits transaction
-    Blockchain-->>Intersend: Confirms transaction
-    Intersend-->>YourApp: Returns response
+
+    Note over User,Wallet: Load & Browse Apps
+    User->>Wallet: Opens Intersend
+    Wallet->>Intersend: Fetch list of available apps
+    Intersend-->>Wallet: Returns app list
+
+    Note over User,App: Launch Selected App
+    User->>Wallet: Selects an app
+    Wallet->>Intersend: Loads app in iframe
+    Intersend->>App: Wraps your app within Intersend interface
+    Intersend->>Wallet: REQUEST_WALLET_INFO
+    Intersend->>App: WALLET_INFO (address, chainId)
+
+    Note over User,App: Transaction Flow
+    User->>App: Initiates transaction (e.g. purchase, swap)
+    App->>Intersend: eth_sendTransaction (RPC request)
+    Intersend->>Wallet: Constructs, and sends tx data
+    Wallet->>User: Prompts user to approve transaction
+    User->>Wallet: Approves
+    Wallet->>Wallet: Signs & broadcasts to blockchain
+    Wallet->>Intersend: Returns txHash (RPC response)
+    Intersend->>App: Send success or fail
+    App-->>User: Shows success/fail message
 ```
 
-1. User interacts with your app within Intersend
-2. Safe connector automatically connects to user's smart account
-3. Transaction requests are relayed to Intersend via postMessage
-4. Intersend processes transactions using ERC-4337
-5. Responses are sent back to your app
 
 ### Get Listed Once integrated, contact us for review and approval:
 
 - Email: hello@intersend.io
 - Telegram: @erturkarda
 
-We'll review your integration and add your app to the Intersend App Store.
+We’ll add your project to the Intersend App Store so users can seamlessly discover and use your dApp.
+

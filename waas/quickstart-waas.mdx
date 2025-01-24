@@ -1,64 +1,10 @@
 ---
-title: 'Integrate dApps Into Your Wallet'
-description: 'Offer utility-based apps to your users'
-slug: '/waas'
+title: 'Quickstart'
+slug: '/quickstart-waas'
 ---
-Transform your wallet into a powerful Web3 gateway without the overhead of maintaining a dApp store. Intersend enables you to effortlessly embed popular Web3 applications directly into your wallet interface, providing your users with a seamless, secure experience.
-
-## Overview
-
-#### Key Benefits
-
-- **Zero Maintenance dApp Store**: New apps added to Intersend ecosystem automatically become available to your users
-- **Native Experience**: Users interact with dApps directly through your wallet - no external connections needed
-- **Enhanced Security**: All transactions and signatures are handled by your wallet's security infrastructure
-- **Unified User Experience**: One-click access to apps with pre-injected wallet connection
-- **Full Control**: Choose which apps to display and customize the integration to match your wallet's UI
-
-### How It Works
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Wallet as Wallet Provider
-    participant API as Intersend API
-    participant App as dApp (iframe)
-    
-    Note over User,API: Load Apps
-    User->>Wallet: Opens Wallet Provider
-    Wallet->>API: GET /v1/intersend/interspace/apps
-    API-->>Wallet: Return available apps
-    
-    Note over User,App: App Launch
-    User->>Wallet: Selects an app
-    Wallet->>App: Load app in iframe
-    App->>Wallet: REQUEST_WALLET_INFO
-    Wallet-->>App: WALLET_INFO (address, chainId)
-    
-    Note over User,App: Transaction Flow
-    User->>App: Initiates transaction (e.g. buy gift card)
-    App->>Wallet: RPC_REQUEST (eth_sendTransaction)
-    Wallet->>User: Request transaction approval
-    User->>Wallet: Approves transaction
-    Wallet->>Wallet: Handle signing
-    Wallet-->>App: RPC_RESPONSE (txHash)
-    App-->>User: Show transaction success
-```
-
-### Security Architecture
-
-The SDK implements a secure messaging protocol between the embedded app and your wallet:
-
-- Apps run in isolated iframes
-- All signing occurs in your wallet's secure environment
-- No direct access to private keys
-- Origin validation for all messages
-
-
-## Quick Integration Guide
 
 <Tip>
-  See our [complete wallet implementation](https://github.com/intersend/demo-wallet) 
+  See our [complete wallet implementation on Github](https://github.com/intersend/demo-wallet) 
   for a production-ready example of integrating Intersend apps into a wallet.
 </Tip>
 
@@ -86,7 +32,12 @@ function App() {
 
 ### 3. Implement Message Handlers
 
+
+
+Your wallet needs to listen for events from Intersend—such as requests to connect, sign a message, or approve a transaction.
+
 Create these two hooks to handle communication between your wallet and embedded dApps:
+
 
 <Accordion title="src/hooks/useMessageHandler.ts">
 ```typescript
@@ -166,13 +117,13 @@ export function usePortHandler() {
 
 ### 4. Create dApp Store Container
 
-Display available dApps to your users:
+Intersend can serve as your “dApp store” aggregator. You can display all available apps, letting users pick which to launch. For instance:
 
 ```typescript
 import { Port, usePortableApps } from 'universal-portability';
 
 function DAppStoreContainer() {
-  const { apps } = usePortableApps();
+  const { apps } = usePortableApps(); // array of dApp metadata
 
   return (
     <div className="dapp-grid">
@@ -181,7 +132,7 @@ function DAppStoreContainer() {
           <img src={app.logo} alt={app.name} />
           <h3>{app.name}</h3>
           <button onClick={() => navigateToApp(app)}>
-            Launch App
+            Launch {app.name}
           </button>
         </div>
       ))}
@@ -192,7 +143,7 @@ function DAppStoreContainer() {
 
 ### 5. Render dApp Interface
 
-Create a container to load and display the selected dApp:
+When the user selects a dApp, you embed it:
 
 ```typescript
 import { Port } from 'universal-portability';
@@ -226,6 +177,7 @@ The SDK uses a secure postMessage protocol with these main events:
 - `INTERSEND_CONNECT_REQUEST`: Initial wallet connection request
 - `SIGN_MESSAGE_REQUEST`: Request to sign a message
 - `TRANSACTION_REQUEST`: Request to send a transaction
+- `SWITCH_CHAIN_REQUEST`: Request to switch chain
 - `*_RESPONSE`: Corresponding response events
 
 All sensitive operations (signing, approvals) are handled by your wallet's existing security infrastructure, ensuring a safe and consistent user experience.
