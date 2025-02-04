@@ -1,15 +1,22 @@
 ---
-title: 'Overview'
-description: 'Offer a seamless experience to your users'
+title: 'Overview - For App Developers'
+description: 'Distribute your dApp across Web3 wallets'
 slug: '/overview-apps'
 ---
+
+<Note>
+**This guide is for you if:**  
+You're building a dApp and want to:
+- Get listed in Intersend's ecosystem
+- Distribute your app and reach crypto users through partner wallets
+</Note>
 
 Intersend is a non-custodial app store for crypto apps that enables seamless Web3 interactions through a unified experience. The fundamental goal is: **make it simple for your app and your users to connect, sign, and transact**.
 
 The integration enables seamless communication between your app and Intersend through:
 
 - **Auto Connection**: Automatically connects user's wallet with your app on page load with SIWE authentication
-- **Message Relay**: Handles transaction signing, message signing, and contract interactions through secure postMessage communication
+- **Message Relay**: Handles transaction signing, message signing, and contract interactions through event listeners
 - **Non-Intrusive**: Only activates when your app is accessed through Intersend, preserving your existing functionality
 
 Below is a high-level guide for dApps that want to be listed in Intersend and auto-connect with users’ wallets via Intersend.
@@ -30,9 +37,9 @@ A “connector” is a small integration layer that allows Intersend to inject a
 
 If your dApp already has a Safe Connector enabled in Wagmi, you’re effectively compatible with Intersend’s “Safe flow” right away. Otherwise, check our [Privy Guide](https://intersend.mintlify.app/apps/privy) or [Dynamic Guide](https://intersend.mintlify.app/apps/dynamic) for more specific integration steps.
 
-### iFrame & PostMessage
+### iFrame & Event Listeners
 
-Intersend loads your dApp within an iframe, using secure `postMessage` events to:
+Intersend loads your dApp within an iframe, and sends/ expects events to:
 
 1. **Auto-connect** the user’s wallet/account
 2. **Relay transactions** for user signatures

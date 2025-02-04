@@ -1,35 +1,27 @@
 ---
-title: 'Overview'
+title: 'Overview - For Auth Providers'
+description: 'Make your ecosystem apps instantly embeddable'
 slug: '/overview-auth'
 ---
 
-Turn every app in your ecosystem into an “embeddable app” that can run inside any wallet or Web3 interface using Intersend’s universal connector.
+<Note>
+**This guide is for you if:**  
+You provide authentication/wallet management infrastructure (e.g Privy, Dynamic) and want to:
+- Make client apps portable across Web3 interfaces (Worlcoin, Frames, Telegram, Safe)
+- Offer embeddable apps as a value-add feature
+- Expand ecosystem reach without additional work
+</Note>
 
-Intersend is a lightweight, iframe-based “app store” solution that embeds dApps into wallets (or other containers), automatically injecting the correct user account and handling all message passing for signing and transactions.
+Turn every app using your SDK into an embeddable component for Intersend-integrated wallets and platforms.
 
-By providing the Intersend connector in your SDK, every dApp using your auth framework becomes instantly embeddable in any wallet or platform that supports Intersend.
+## Integration Benefits
 
----
-
-## Why Integrate with Intersend?
-
-1. **Grow Your Ecosystem**
-
-Every app built on your SDK becomes portable. Wallets or other containers that integrate with Intersend can instantly offer those apps—no extra setup on the dApp side.
-
-2. **Unified User Experience**
-
-Intersend automatically handles account injection, transaction flow, and chain switching through secure postMessage. Your apps stay brand-aligned while benefiting from Intersend’s universal compatibility.
-
-3. **Secure by Design**
-
-No private key exposure: All signing logic remains in the user’s wallet.
-
-4. **No Maintenance Overload**
-
-Once the connector is set up, all dApps on your platform instantly work inside Intersend.
-
-Wallet teams embed Intersend once; every new app from your ecosystem automatically becomes available to their users.
+- **Ecosystem Growth**  
+  Client apps become instantly available to all Intersend partner wallets
+- **Zero Client Changes**  
+  Add Intersend connector at SDK layer - no app modifications needed
+- **Universal Compatibility**  
+  Works with any partner wallet - making it easy to integrate apps with a few lines of code
 
 ---
 
@@ -37,15 +29,21 @@ Wallet teams embed Intersend once; every new app from your ecosystem automatical
 
 Below is a simplified flow describing how an app (built with your auth SDK) interacts with a user's wallet through Intersend.
 
-## Basic Flow
+## Example
 
-1. Someone uses Intersend SDK to add "App X" into "App Y" (under the hood, an iframe loads the dApp)
+1. A wallet infrastructure provider (let's call this CoinPace Wallet) uses Intersend SDK to add "App X" into their explore page. *App X is built with your authentication SDK.*
 
-2. "App X" is built with your authentication sdk.
-   Your SDK automatically injects the Intersend connector into App X.
+2. Users click App X within CoinPace Wallet's interface. The app loads in an iframe.
 
-3. The wallet in "App Y" sees that your connector is present and
-   passes user account + chain info via secure postMessage to the embedded app.
+3. Your Authentication SDK automatically injects Intersend's connector to App X at initial page load.
+
+4. Intersend's iframe middleware facilitates sharing user's account with the app and automatically connects to it with SIWE (Sign in with Ethereum)
+
+5. When transactions occur:  
+   1. App X constructs transaction data  
+   2. Intersend relays payload to CoinPace Wallet  
+   3. User approves/declines in native wallet UI  
+   4. Result propagates back to the app
 
 ### End Result
 - The app is fully functional, automatically connected to the user's wallet/account 
